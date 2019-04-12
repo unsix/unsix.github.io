@@ -1,87 +1,36 @@
 const path = require('path');
 
-function resolve(dir) {
-  return path.join(__dirname, dir)
-}
-
-// 导入compression-webpack-plugin
-const CompressionWebpackPlugin = require('compression-webpack-plugin')
-// const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
-const externals = {
-  'vue': 'Vue',
-  'vue-router': 'VueRouter',
-  'vuex': 'Vuex',
-  'axios': 'axios',
-  'ELEMENT': 'element-ui'
-}
-// 定义压缩文件类型
-const productionGzipExtensions = ['js', 'css']
-
 module.exports = {
-  // publicPath: '/vue-qiugu-ms/', //基本路径
-  outputDir: 'dist',
-  productionSourceMap: false,
-  assetsDir: 'static',
-  filenameHashing: true,
-  pages: {
-    index: {
-      // page 的入口
-      entry: "src/main.js",
-      // 模板来源
-      template: "public/index.html", // 这里用来区分加载那个 html
-      // 在 dist/index.html 的输出
-      filename: "index.html",
-      // 在这个页面中包含的块，默认情况下会包含
-      // 提取出来的通用 chunk 和 vendor chunk。
-      chunks: ["chunk-vendors", "chunk-common", "index"]
-    }
+  build: {
+    env: require('./prod.env'),
+    index: path.resolve(__dirname, '../dist/index.html'),
+    assetsRoot: path.resolve(__dirname, '../dist'),
+    assetsSubDirectory: 'static',
+    assetsPublicPath: './',
+    productionSourceMap: true,
+    // Gzip off by default as many popular static hosts such as
+    // Surge or Netlify already gzip all static assets for you.
+    // Before setting to `true`, make sure to:
+    // npm install --save-dev compression-webpack-plugin
+    productionGzip: false,
+    productionGzipExtensions: ['js', 'css'],
+    // Run the build command with an extra argument to
+    // View the bundle analyzer report after build finishes:
+    // `npm run build --report`
+    // Set to `true` or `false` to always turn it on or off
+    bundleAnalyzerReport: process.env.npm_config_report
   },
-  // 高级的方式
-  configureWebpack: config => {
-    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {
-      // config.externals = externals
-      config.plugins.push(
-        new CompressionWebpackPlugin({
-          filename: '[path].gz[query]',
-          algorithm: 'gzip',
-          test: new RegExp('\\.(' + productionGzipExtensions.join('|') + ')$'),
-          threshold: 10240,
-          minRatio: 0.8
-        }),
-        //   new UglifyJsPlugin({
-        //     uglifyOptions: {
-        //       compress: {
-        //         warnings: false,
-        //         drop_debugger: true,
-        //         drop_console: true,
-        //       },
-        //     },
-        //     sourceMap: false,
-        //     parallel: true,
-        //   }),
-      );
-      const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-      config.plugins.push(new BundleAnalyzerPlugin());
-    }
-  },
-  // CSS 相关选项
-  css: {
-    extract: true,
-    sourceMap: false,
-    loaderOptions: {}, // 为所有的 CSS 及其预处理文件开启 CSS Modules。
-    modules: false
-  },
-  // 在多核机器下会默认开启。
-  parallel: require('os').cpus().length > 1,
-  // PWA 插件的选项。
-  pwa: {},
-  // 配置 webpack-dev-server 行为。
-  devServer: {
-    port: 3001,
-    open: true,
-    proxy: 'http://localhost:8080'
-  },
-
-  // 第三方插件的选项
-  pluginOptions: {}
+  env: require('./dev.env'),
+  port: 8080,
+  autoOpenBrowser: true,
+  assetsSubDirectory: 'static',
+  assetsPublicPath: '/',
+  proxyTable: {},
+  // CSS Sourcemaps off by default because relative paths are "buggy"
+  // with this option, according to the CSS-Loader README
+  // (https://github.com/webpack/css-loader#sourcemaps)
+  // In our experience, they generally work as expected,
+  // just be aware of this issue when enabling this option.
+  cssSourceMap: false
+}
 }
