@@ -1,141 +1,92 @@
+const path = require('path');
+
+function resolve(dir) {
+  return path.join(__dirname, dir)
+}
+
+// 导入compression-webpack-plugin
+const CompressionWebpackPlugin = require('compression-webpack-plugin')
+// const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const externals = {
+  'vue': 'Vue',
+  'vue-router': 'VueRouter',
+  'vuex': 'Vuex',
+  'axios': 'axios',
+  'ELEMENT': 'element-ui'
+}
+// 定义压缩文件类型
+const productionGzipExtensions = ['js', 'css']
+
 module.exports = {
-  baseUrl: process.env.NODE_ENV === 'production'
-    ? '//your_url'
-    : '/',
-
+  publicPath: '/vue-qiugu-ms/', //基本路径
   outputDir: 'dist',
-
+  productionSourceMap: false,
   assetsDir: 'static',
-
   filenameHashing: true,
-
-  // When building in multi-pages mode, the webpack config will contain different plugins
-  // (there will be multiple instances of html-webpack-plugin and preload-webpack-plugin).
-  // Make sure to run vue inspect if you are trying to modify the options for those plugins.
-  build: {
-    env: require('./prod.env'),
-    index: path.resolve(__dirname, '../dist/index.html'),
-    assetsRoot: path.resolve(__dirname, '../dist'),
-    assetsSubDirectory: 'static',
-    assetsPublicPath: './',
-    productionSourceMap: true,
-    // Gzip off by default as many popular static hosts such as
-    // Surge or Netlify already gzip all static assets for you.
-    // Before setting to `true`, make sure to:
-    // npm install --save-dev compression-webpack-plugin
-    productionGzip: false,
-    productionGzipExtensions: ['js', 'css'],
-    // Run the build command with an extra argument to
-    // View the bundle analyzer report after build finishes:
-    // `npm run build --report`
-    // Set to `true` or `false` to always turn it on or off
-    bundleAnalyzerReport: process.env.npm_config_report
-  },
   pages: {
     index: {
-      // entry for the pages
-      entry: 'src/pages/index/index.js',
-      // the source template
-      template: 'src/pages/index/index.html',
-      // output as dist/index.html
-      filename: 'index.html',
-      // when using title option,
-      // template title tag needs to be <title><%= htmlWebpackPlugin.options.title %></title>
-      title: '首页',
-      // chunks to include on this pages, by default includes
-      // extracted common chunks and vendor chunks.
-      chunks: ['chunk-vendors', 'chunk-common', 'index']
+      // page 的入口
+      entry: "src/main.js",
+      // 模板来源
+      template: "public/index.html", // 这里用来区分加载那个 html
+      // 在 dist/index.html 的输出
+      filename: "index.html",
+      // 在这个页面中包含的块，默认情况下会包含
+      // 提取出来的通用 chunk 和 vendor chunk。
+      chunks: ["chunk-vendors", "chunk-common", "index"]
     }
-    // when using the entry-only string format,
-    // template is inferred to be `public/subpage.html`
-    // and falls back to `public/index.html` if not found.
-    // Output filename is inferred to be `subpage.html`.
-    // subpage: ''
   },
-
-  // eslint-loader 是否在保存的时候检查
-  lintOnSave: true,
-
-  // 是否使用包含运行时编译器的Vue核心的构建
-  runtimeCompiler: false,
-
-  // 默认情况下 babel-loader 忽略其中的所有文件 node_modules
-  transpileDependencies: [],
-
-  // 生产环境 sourceMap
-  productionSourceMap: false,
-
-  // cors 相关 https://jakearchibald.com/2017/es-modules-in-browsers/#always-cors
-  // corsUseCredentials: false,
-  // webpack 配置，键值对象时会合并配置，为方法时会改写配置
-  // https://cli.vuejs.org/guide/webpack.html#simple-configuration
-  configureWebpack: (config) => {
+  // 高级的方式
+  configureWebpack: config => {
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {
+      // config.externals = externals
+      config.plugins.push(
+        new CompressionWebpackPlugin({
+          filename: '[path].gz[query]',
+          algorithm: 'gzip',
+          test: new RegExp('\\.(' + productionGzipExtensions.join('|') + ')$'),
+          threshold: 10240,
+          minRatio: 0.8
+        }),
+        //   new UglifyJsPlugin({
+        //     uglifyOptions: {
+        //       compress: {
+        //         warnings: false,
+        //         drop_debugger: true,
+        //         drop_console: true,
+        //       },
+        //     },
+        //     sourceMap: false,
+        //     parallel: true,
+        //   }),
+      );
+      const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+      config.plugins.push(new BundleAnalyzerPlugin());
+    }
   },
-
-  // webpack 链接 API，用于生成和修改 webapck 配置
-  // https://github.com/mozilla-neutrino/webpack-chain
-  chainWebpack: (config) => {
-    // 因为是多页面，所以取消 chunks，每个页面只对应一个单独的 JS / CSS
-    config.optimization
-      .splitChunks({
-        cacheGroups: {}
-      });
-
-    // 'src/lib' 目录下为外部库文件，不参与 eslint 检测
-    config.module
-      .rule('eslint')
-      .exclude
-      .add('/Users/maybexia/Downloads/FE/community_built-in/src/lib')
-      .end()
-  },
-
-  // 配置高于chainWebpack中关于 css loader 的配置
+  // CSS 相关选项
   css: {
-    // 是否开启支持 foo.module.css 样式
-    modules: false,
-
-    // 是否使用 css 分离插件 ExtractTextPlugin，采用独立样式文件载入，不采用 <style> 方式内联至 html 文件中
     extract: true,
-
-    // 是否构建样式地图，false 将提高构建速度
     sourceMap: false,
-
-    // css预设器配置项
-    loaderOptions: {
-      css: {
-        // options here will be passed to css-loader
-      },
-
-      postcss: {
-        // options here will be passed to postcss-loader
-      }
-    }
+    loaderOptions: {}, // 为所有的 CSS 及其预处理文件开启 CSS Modules。
+    modules: false
   },
-
-  // All options for webpack-dev-server are supported
-  // https://webpack.js.org/configuration/dev-server/
-  devServer: {
-    open: true,
-
-    host: '127.0.0.1',
-
-    port: 3000,
-
-    https: false,
-
-    hotOnly: false,
-
-    proxy: null,
-
-    before: app => {
-    }
-  },
-  // 构建时开启多进程处理 babel 编译
+  // 在多核机器下会默认开启。
   parallel: require('os').cpus().length > 1,
-
-  // https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-pwa
+  // PWA 插件的选项。
   pwa: {},
+  // 配置 webpack-dev-server 行为。
+  devServer: {
+    port: 3001,
+    open: true,
+    proxy: 'http://localhost:8080'
+  },
 
-  // 第三方插件配置
+  // 第三方插件的选项
   pluginOptions: {}
-};
+}
+
+作者：qiugu
+链接：https://juejin.im/post/5c6bd18951882549d96b5e18
+  来源：掘金
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
