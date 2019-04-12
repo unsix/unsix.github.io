@@ -18,7 +18,7 @@ const externals = {
 const productionGzipExtensions = ['js', 'css']
 
 module.exports = {
-  publicPath: '/vue-qiugu-ms/', //基本路径
+  // publicPath: '/vue-qiugu-ms/', //基本路径
   outputDir: 'dist',
   productionSourceMap: false,
   assetsDir: 'static',
@@ -85,4 +85,3 @@ module.exports = {
   // 第三方插件的选项
   pluginOptions: {}
 }
-
